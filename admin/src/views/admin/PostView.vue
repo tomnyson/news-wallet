@@ -158,7 +158,6 @@ const newPost = ref({
 });
 const newTag = ref("");
 const image_url = process.env.VUE_APP_STATIC_URL  || 'http://localhost:8000/storage';
-console.log(process.env.VUE_APP_STATIC_URL);
 onMounted(async () => {
   const responseCategories = await newService.getCategories();
   const responseTags = await newService.getTags();
