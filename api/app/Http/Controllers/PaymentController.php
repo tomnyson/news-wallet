@@ -7,6 +7,7 @@ use Stripe\Stripe;
 use Stripe\Customer;
 use Stripe\EphemeralKey;
 use Stripe\PaymentIntent;
+use Illuminate\Support\Facades\Auth;
 
 class PaymentController extends Controller
 {
@@ -23,9 +24,9 @@ class PaymentController extends Controller
             \Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
             \Stripe\Stripe::setApiVersion($apiVersion);
 
-            // Step 1: Create a Stripe Customer (replace with existing customer logic if needed)
             $customer = \Stripe\Customer::create([
-                'description' => 'Customer for payment sheet',
+               'description' => 'Customer for payment sheet - ' . Auth::user()->name, // Include user name in description
+                'email' => Auth::user()->email, // Include user email
             ]);
 
             // Step 2: Create an Ephemeral Key
@@ -37,10 +38,14 @@ class PaymentController extends Controller
             } catch (\Exception $e) {
                 throw new \Exception('Error creating ephemeral key: ' . $e->getMessage());
             }
+            $validate = $request->validate( [
+                'currency' => 'required|string',
+                'price' => 'nullable|integer', // Minimum amount in cents (50 cents = $0.50)
+            ]);
 
             // Step 3: Create a Payment Intent
             $paymentIntent = \Stripe\PaymentIntent::create([
-                'amount' => 5000, // Amount in cents (e.g., $50.00)
+                'amount' => $validate['price']*100, // Amount in cents (e.g., $50.00)
                 'currency' => 'usd', // Change currency if needed
                 'customer' => $customer->id,
                 'automatic_payment_methods' => [

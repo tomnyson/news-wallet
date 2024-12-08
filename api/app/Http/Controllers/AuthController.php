@@ -52,7 +52,7 @@ class AuthController extends Controller
 
         $user = User::where('email', $request->email)->firstOrFail();
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+        $token = $user->createToken('auth_token', ['*'], now()->addDays(1))->plainTextToken;
 
         return response()->json([
             'access_token' => $token,
@@ -68,4 +68,7 @@ class AuthController extends Controller
 
         return response()->json(['message' => 'Logged out successfully']);
     }
+
+    // Get the current user
+    
 }
