@@ -64,16 +64,12 @@ class UserController extends Controller
         }
 
         $request->validate([
-            'name' => 'sometimes|required|string|max:255',
-            'email' => 'sometimes|required|email|unique:users,email,' . $id,
-            'password' => 'sometimes|required|min:6',
-            "role" => "sometimes|required|in:admin,user"
+            'name' => 'required|string|max:255',
+            "role" => "required|in:admin,user"
         ]);
 
         $user->update([
             'name' => $request->name ?? $user->name,
-            'email' => $request->email ?? $user->email,
-            'password' => $request->password ? Hash::make($request->password) : $user->password,
             "role" => $request->role ?? $user->role
         ]);
 

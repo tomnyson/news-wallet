@@ -36,6 +36,9 @@ const authService = {
     addUser(payload) {
       return api.post('/users', payload).catch(handleApiError);
     },
+    updateUser(id, payload) {
+      return api.put(`/users/${id}`, payload).catch(handleApiError);
+    },
   };
   
   export default authService;

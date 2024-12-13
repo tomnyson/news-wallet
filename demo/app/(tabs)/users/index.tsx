@@ -9,11 +9,16 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import Entypo from '@expo/vector-icons/Entypo';
 import {checkTokenValidity} from '@/services/auth';
+import { Colors } from '@/constants/Colors'
+import {launchImageLibrary} from 'react-native-image-picker';
 
 export default function ProfileScreen() {
   const router = useRouter()
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [profileImage, setProfileImage] = useState(require('@/assets/images/images-holder.png'));
+
   const navigation = useNavigation();
+
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
       checkAuth();
@@ -44,6 +49,25 @@ export default function ProfileScreen() {
     }
   };
 
+
+  const handleImageUpload = async () => {
+    try {
+      const result = await launchImageLibrary({
+        mediaType: 'photo',
+        maxWidth: 300,
+        maxHeight: 300,
+        quality: 0.8,
+      });
+
+      if (!result.didCancel && result.assets && result.assets.length > 0) {
+        const selectedImage = result.assets[0].uri;
+        setProfileImage({ uri: selectedImage });
+      }
+    } catch (error) {
+      console.error('Image upload error:', error);
+    }
+  };
+
   const utilities = [
   //   { id: '1', name: 'Lịch Việt', icon: <FontAwesome name="calendar" size={24} color="black" />, path: '/(tabs)/users/utility',
   //   url: 'https://lichviet.app/'
@@ -71,7 +95,7 @@ export default function ProfileScreen() {
     {
       id: '6',
       name: 'Wallet',
-      icon: <MaterialIcons name="account-balance-wallet" size={24} color="#003366" />,
+      icon: <MaterialIcons name="account-balance-wallet" size={30} color={Colors.light.primary} />,
       path: '/(tabs)/users/wallet',
       url: ''
     },
@@ -98,7 +122,7 @@ export default function ProfileScreen() {
   )
   return (
     <View style={styles.container}>
-      {/* Profile Header */}
+       <TouchableOpacity onPress={handleImageUpload}>
       <View style={styles.profileHeader}>
         <Image source={require('@/assets/images/images-holder.png')} style={styles.avatar} />
         <TouchableOpacity onPress={handleAction}>
@@ -107,25 +131,30 @@ export default function ProfileScreen() {
           </Text>
         </TouchableOpacity>
       </View>
+      </TouchableOpacity>
+
+      {/* Saved Options Section */}
 
       <View style={styles.savedOptions}>
         <View>
-          <TouchableOpacity style={styles.optionItem}>
-            <MaterialIcons name="bookmark" size={20} color="#003366" />
+          <TouchableOpacity style={styles.optionItem}
+            onPress={() => router.push('/(tabs)/bookmark')}
+          >
+            <MaterialIcons name="bookmark" size={24} color={Colors.light.primary} />
             <Text style={styles.optionText}>Bookmark</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.optionItem}>
-            <AntDesign name="checksquare" size={24} color="#003366" />
-            <Text style={styles.optionText}>Đang theo dõi</Text>
+            <AntDesign name="checksquare" size={20} color={Colors.light.primary} />
+            <Text style={styles.optionText}>Following</Text>
           </TouchableOpacity>
         </View>
         <View>
           <TouchableOpacity style={styles.optionItem}>
-            <MaterialCommunityIcons name="download-box" size={24} color="#003366" />
+            <MaterialCommunityIcons name="download-box" size={24} color={Colors.light.primary} />
             <Text style={styles.optionText}>News downloaded</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.optionItem}>
-            <MaterialIcons name="access-time-filled" size={24} color="black" />
+            <MaterialIcons name="access-time-filled" size={24} color={Colors.light.primary} />
             <Text style={styles.optionText}>Recently Read</Text>
           </TouchableOpacity>
         </View>
@@ -151,7 +180,6 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
   },
   profileHeader: {
-    borderBottomWidth: 1,
     borderBottomColor: '#ddd',
     backgroundColor: '#f5f5f5',
     flexDirection: 'row',
@@ -174,7 +202,6 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     paddingVertical: 20,
-    borderBottomWidth: 1,
     borderBottomColor: '#ddd',
   },
   optionItem: {
@@ -203,8 +230,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
   },
   utilityText: {
     marginLeft: 12,

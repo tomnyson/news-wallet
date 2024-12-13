@@ -19,6 +19,7 @@ export default function CategoriesScreen() {
   const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
   const router = useRouter()
+  const [keyword, setKeyword] = useState('')
 
   useEffect(() => {
     fetchData()
@@ -51,14 +52,23 @@ export default function CategoriesScreen() {
       </View>
     )
   }
+
+  const handleSearch = () => {
+    router.push(`/articles?keyword=${keyword}`)
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.searchContainer}>
         <MaterialIcons name="search" size={24} color="#ccc" />
-        <TextInput placeholder="Search" placeholderTextColor="#ccc" style={styles.searchInput} />
+        <TextInput placeholder="Search" placeholderTextColor="#ccc" style={styles.searchInput}
+           onChangeText={setKeyword}
+           onSubmitEditing={handleSearch}
+
+        />
       </View>
 
-      <Text style={styles.sectionTitle}>Tags</Text>
+      <Text style={styles.sectionTitle}>Tag</Text>
       <FlatList
         data={tags || []}
         keyExtractor={(item) => item.id.toString()}
@@ -68,7 +78,7 @@ export default function CategoriesScreen() {
         renderItem={({ item }) => (
           <TouchableOpacity
             style={styles.tag}
-            onPress={() => router.push(`/(tabs)/articles?tagId=${item.id}`)}
+            onPress={() => router.push(`/articles?tagId=${item.id}`)}
           >
             <Text style={styles.tagText}>{item.name}</Text>
           </TouchableOpacity>
@@ -91,7 +101,7 @@ export default function CategoriesScreen() {
           return (
             <TouchableOpacity
               style={[styles.categoryBox, { backgroundColor }]}
-              onPress={() => router.push(`/(tabs)/articles?categoryId=${item.id}`)}
+              onPress={() => router.push(`/articles?categoryId=${item.id}`)}
             >
               <Text style={styles.categoryText}>{item.name}</Text>
             </TouchableOpacity>
@@ -104,7 +114,6 @@ export default function CategoriesScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     backgroundColor: '#f5f5f5',
   },
   header: {
@@ -141,6 +150,7 @@ const styles = StyleSheet.create({
     color: '#333',
     marginHorizontal: 16,
     marginBottom: 8,
+    paddingVertical: 16
   },
   tagsContainer: {
     paddingHorizontal: 5,
@@ -162,7 +172,8 @@ const styles = StyleSheet.create({
     textTransform: 'lowercase',
   },
   categoriesContainer: {
-    paddingHorizontal: 16,
+    justifyContent: 'flex-start',
+    paddingVertical: 20,
   },
   categoryBox: {
     backgroundColor: '#003366',

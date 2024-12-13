@@ -5,67 +5,102 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert,
-  ActivityIndicator
+  ActivityIndicator,
 } from "react-native";
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
-import { useRouter } from 'expo-router';
+import Toast from "react-native-toast-message";
+import { useRouter } from "expo-router";
+import {login} from "@/services/auth";
 
 const API = process.env.EXPO_PUBLIC_API_URL;
+
 export default function LoginScreen() {
-
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
   const router = useRouter();
+
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const token = await AsyncStorage.getItem('token');
+        const token = await AsyncStorage.getItem("token");
         if (token) {
-          router.push('/(tabs)/users');
+          router.push("/(tabs)/users");
         }
       } catch (error) {
-        console.error('Authentication check error:', error);
+        console.error("Authentication check error:", error);
       }
     };
 
     checkAuth();
   }, []);
 
-   const handleLogin = async () => {
-  if (!email || !password) {
-    Alert.alert('Error', 'Please fill in all fields');
-    return;
-  }
+  const validateFields = () => {
+    let isValid = true;
+    setEmailError("");
+    setPasswordError("");
 
-  try {
-    // Make API call to login endpoint
-    const response = await axios.post(`${API}/api/login`, {
-      email,
-      password,
-    });
-    console.log("API", response)
-    console.log(JSON.stringify(response))
-    if (response.status === 200) {
-      const { access_token } = response.data;
-      await AsyncStorage.setItem('token', access_token);
-      router.push('/(tabs)/users');
-      Alert.alert('Success', 'Login successful');
-    }
-  } catch (error) {
-    // Handle error response
-    if (error.response && error.response.data) {
-      Alert.alert('Login Failed', error.response.data.message || 'Invalid credentials');
+    if (!email) {
+      setEmailError("Email is required.");
+      isValid = false;
     } else {
-      Alert.alert('Error', 'An unexpected error occurred. Please try again.');
+      const emailRegex = /^\S+@\S+\.\S+$/;
+      if (!emailRegex.test(email)) {
+        setEmailError("Please enter a valid email address.");
+        isValid = false;
+      }
     }
-    console.error('Login error:', error);
-  }
-};
 
+    if (!password) {
+      setPasswordError("Password is required.");
+      isValid = false;
+    } else if (password.length < 8) {
+      setPasswordError("Password must be at least 8 characters long.");
+      isValid = false;
+    }
+
+    return isValid;
+  };
+
+  const handleLogin = async () => {
+    if (!validateFields()) return;
+
+    setLoading(true);
+    try {
+      const response = await login({ email, password });
+
+      if (response && response.access_token) {
+        const { access_token } = response;
+        await AsyncStorage.setItem("token", access_token);
+        Toast.show({
+          type: "success",
+          text1: "Login Successful",
+          text2: "You have been logged in.",
+        });
+        router.push("/(tabs)/users");
+      }else {
+        Toast.show({
+          type: "error",
+          text1: "Login Failed",
+          text2: "Invalid credentials.",
+        });
+      }
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message || "An unexpected error occurred.";
+      Toast.show({
+        type: "error",
+        text1: "Login Failed",
+        text2: errorMessage,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -79,6 +114,7 @@ export default function LoginScreen() {
         keyboardType="email-address"
         autoCapitalize="none"
       />
+      {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
 
       {/* Password Input */}
       <TextInput
@@ -90,24 +126,37 @@ export default function LoginScreen() {
         secureTextEntry
         autoCapitalize="none"
       />
+      {passwordError ? (
+        <Text style={styles.errorText}>{passwordError}</Text>
+      ) : null}
 
       {/* Login Button */}
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Login</Text>
+      <TouchableOpacity
+        style={styles.button}
+        onPress={handleLogin}
+        disabled={loading}
+      >
+        {loading ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.buttonText}>Login</Text>
+        )}
       </TouchableOpacity>
 
       {/* Forgot Password */}
-      <TouchableOpacity onPress={()=>router.push('/forgot')}>
+      <TouchableOpacity onPress={() => router.push("/forgot")}>
         <Text style={styles.forgotPassword}>Forgot Password?</Text>
       </TouchableOpacity>
 
       {/* Sign Up Link */}
       <View style={styles.signUpContainer}>
         <Text style={styles.signUpText}>Don't have an account?</Text>
-        <TouchableOpacity onPress={()=>router.push('/signup')}>
+        <TouchableOpacity onPress={() => router.push("/signup")}>
           <Text style={styles.signUpLink}> Sign Up</Text>
         </TouchableOpacity>
       </View>
+
+      <Toast />
     </View>
   );
 }
@@ -120,23 +169,23 @@ const styles = StyleSheet.create({
     backgroundColor: "#f5f5f5",
     paddingHorizontal: 16,
   },
-  title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#333",
-    marginBottom: 40,
-  },
   input: {
     width: "100%",
     height: 50,
     backgroundColor: "#fff",
     borderRadius: 8,
     paddingHorizontal: 16,
-    marginBottom: 20,
+    marginBottom: 10,
     borderWidth: 1,
     borderColor: "#ddd",
     fontSize: 16,
     color: "#333",
+  },
+  errorText: {
+    color: "red",
+    fontSize: 12,
+    marginBottom: 10,
+    alignSelf: "flex-start",
   },
   button: {
     width: "100%",

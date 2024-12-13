@@ -20,42 +20,20 @@ import newService from '@/services/newService'
 import {checkTokenValidity} from '@/services/auth';
 import { useRouter } from 'expo-router'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import { Colors } from '@/constants/Colors'
 
 export default function WalletScreen() {
-  const [isModalVisible, setIsModalVisible] = useState(false)
   const [cardDetails, setCardDetails] = useState(null)
-  const [cardError, setCardError] = useState(null)
-  const { initPaymentSheet, presentPaymentSheet } = useStripe()
-  const { isPlatformPaySupported, confirmPlatformPayPayment } = usePlatformPay()
   const { confirmPayment } = useStripe()
-  const [subscription, setSubscription] = useState('12')
   const [loading, setLoading] = useState(false)
   const [currentUser, setCurrentUser] = useState(null)
   const router = useRouter()
   const navigation = useNavigation()
 
   useEffect(() => {
-    console.log('Checking auth...');
-    checkAuth();
-
-    const fetchUserData = async () => {
-      try {
-        setLoading(true)
-        const response = await newService.getCurrentUser()
-        setCurrentUser(response.user)
-      } catch (error) {
-        console.error('Error fetching user data:', error)
-        Alert.alert('Error', 'Failed to fetch user data.')
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchUserData()
-  }, [router]);
-
-  useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
       checkAuth();
+      fetchUserData()
     });
 
     return unsubscribe;
@@ -84,10 +62,23 @@ export default function WalletScreen() {
     }
   };
 
+  const fetchUserData = async () => {
+    try {
+      setLoading(true)
+      const response = await newService.getCurrentUser()
+      setCurrentUser(response.user)
+    } catch (error) {
+      console.error('Error fetching user data:', error)
+      Alert.alert('Error', 'Failed to fetch user data.')
+    } finally {
+      setLoading(false)
+    }
+  }
+  
   if (loading) {
     return (
       <View style={styles.container}>
-        <ActivityIndicator size="large" color="#007bff" />
+        <ActivityIndicator size="large" color={Colors.light.primary} />
       </View>
     )
   }
@@ -140,7 +131,7 @@ export default function WalletScreen() {
           {item.package.name}
         </Text>
         <Text style={styles.transactionDate}>
-          ngày mua: {new Date(item.created_at).toLocaleString('vi-VN', {
+          date of purchase: {new Date(item.created_at).toLocaleString('vi-VN', {
             day: '2-digit',
             month: '2-digit',
             year: 'numeric',
@@ -150,7 +141,7 @@ export default function WalletScreen() {
           })}
         </Text>
        <Text style={styles.transactionDate}>
-       ngày hết hạn: {new Date(item.expires_at).toLocaleString('vi-VN', {
+       expiration date: {new Date(item.expires_at).toLocaleString('vi-VN', {
             day: '2-digit',
             month: '2-digit',
             year: 'numeric',
@@ -172,58 +163,6 @@ export default function WalletScreen() {
       </View>
     </View>
   )
-
-  // Payment request configuration
-  const paymentRequest = {
-    amount: 50.0, // Amount in dollars
-    currency: 'USD',
-    billingAddressRequired: true,
-  }
-
-  const handlePayPress = async () => {
-    console.log('handlePayPress', cardDetails)
-    if (!cardDetails?.complete) {
-      Alert.alert('Error', 'Please enter complete card details')
-      return
-    }
-
-    try {
-      setLoading(true)
-      const response = await fetch('http://your-backend.com/create-payment-intent', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-      const { clientSecret } = await response.json()
-
-      // Confirm the payment
-      const { error } = await confirmPayment(clientSecret, {
-        paymentMethodType: 'Card',
-        paymentMethodData: {
-          billingDetails: {
-            name: 'John Doe',
-            email: 'john.doe@example.com',
-          },
-        },
-      })
-      // Call your backend to create a Payment Intent
-      if (error) {
-        Alert.alert('Payment failed', error.message)
-      } else {
-        Alert.alert('Payment successful', 'Thank you for your payment!')
-      }
-    } catch (error) {
-      console.error('Payment error', error)
-      Alert.alert('Payment error', error.message)
-    } finally {
-      setLoading(false)
-    }
-  }
-  const handleSelectSubscription = (value) => {
-    console.log('Selected subscription:', value)
-    setSubscription(value)
-  }
 
   return (
     <View style={styles.container}>
@@ -284,7 +223,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   balanceContainer: {
-    backgroundColor: '#003366',
+    backgroundColor: Colors.light.primary,
     borderRadius: 12,
     padding: 20,
     alignItems: 'center',
@@ -306,7 +245,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   actionButton: {
-    backgroundColor: '#003366',
+    backgroundColor: Colors.light.primary,
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 8,
@@ -322,7 +261,7 @@ const styles = StyleSheet.create({
   historyTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
+    color: Colors.light.secondary,
     marginTop: 30,
     marginBottom: 10,
   },
@@ -345,11 +284,11 @@ const styles = StyleSheet.create({
   transactionType: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#333',
+    color: Colors.light.secondary,
   },
   transactionDate: {
     fontSize: 14,
-    color: '#888',
+    color: Colors.light.secondary,
     marginTop: 4,
   },
   transactionAmount: {
@@ -358,14 +297,14 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   positiveAmount: {
-    color: '#4CAF50', // Green for deposits
+    color: Colors.light.success,
   },
   negativeAmount: {
-    color: '#FF5A5F', // Red for withdrawals
+    color: Colors.light.error,
   },
   transactionStatus: {
     fontSize: 12,
-    color: '#888',
+    color: Colors.light.secondary,
     textAlign: 'right',
     marginTop: 4,
   },
@@ -376,7 +315,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   payButton: {
-    backgroundColor: '#003366',
+    backgroundColor: Colors.light.primary,
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: 'center',
@@ -401,13 +340,6 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 50,
     marginVertical: 20,
-  },
-  payButton: {
-    backgroundColor: '#003366',
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    width: '100%',
   },
   payButtonText: {
     color: '#fff',

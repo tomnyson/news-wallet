@@ -7,7 +7,6 @@ const handleApiError = (error) => {
     console.error('Response status:', error.response.status);
     console.error('Response headers:', error.response.headers);
 
-    // Handle 401 Unauthorized
     if (error.response.status === 401) {
       console.warn('Unauthorized access (401). Redirecting to login...');
       // Example: Trigger a logout, clear tokens, or redirect to login
@@ -30,9 +29,7 @@ const handleApiError = (error) => {
 export const login = async ({ email, password }) => {
   try {
     const response = await api.post('/api/login', { email, password }).catch(handleApiError)
-    const token = response.token
-    await AsyncStorage.setItem('token', token)
-    return token
+    return response
   } catch (error) {
     console.error('Login failed:', error)
   }
@@ -59,9 +56,7 @@ export const forgotPassword = async (payload) => {
 export const checkTokenValidity = async () => {
   try {
     const response = await api
-      .get('/api/check-token', {
-        method: 'POST'
-      })
+      .get('/api/check-token')
     return response
   } catch (error) {
    return error

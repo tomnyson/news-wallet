@@ -22,6 +22,8 @@ class PaymentController extends Controller
 
             // Set Stripe API key and version
             \Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
+            $stripeSecret = env('MODE') === 'dev' ? env('STRIPE_SECRET_DEV') : env('STRIPE_SECRET_PROD');
+            \Stripe\Stripe::setApiKey($stripeSecret);
             \Stripe\Stripe::setApiVersion($apiVersion);
 
             $customer = \Stripe\Customer::create([

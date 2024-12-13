@@ -5,41 +5,71 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   ActivityIndicator,
 } from 'react-native'
-
+import Toast from 'react-native-toast-message'
 import { useRouter } from 'expo-router'
 import { forgotPassword } from '@/services/auth'
-const API = process.env.EXPO_PUBLIC_API_URL
+
 export default function ForgotScreen() {
   const [email, setEmail] = useState('')
+  const [emailError, setEmailError] = useState("");
   const [loading, setLoading] = useState(false)
 
   const router = useRouter()
 
-  const handleForgot = async () => {
+  const validateEmail = () => {
     if (!email) {
-      Alert.alert('Error', 'Please fill in all fields')
-      return
+      setEmailError('Email field cannot be empty')
+      return false
     }
+
+    const emailRegex = /^\S+@\S+\.\S+$/
+    if (!emailRegex.test(email)) {
+      setEmailError('Invalid email address')
+      return false
+    }
+
+    return true
+  }
+
+  const handleForgot = async () => {
+    if (!validateEmail()) return
+
+    setLoading(true)
     try {
-      setLoading(true)
       const response = await forgotPassword({ email })
-      if (response && response.status) {
-        Alert.alert('Error', 'An unexpected error occurred. Please try again.')
+      if (!response && !response.message) {
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'An unexpected error occurred. Please try again.',
+        })
       } else {
-        Alert.alert('Success', 'Check your email for password reset')
+        Toast.show({
+          type: 'success',
+          text1: 'Success',
+          text2: 'Check your email for password reset.',
+        })
         router.push('/login')
       }
     } catch (error) {
       if (error.response && error.response.data) {
-        Alert.alert('Login Failed', error.response.data.message || 'Invalid credentials')
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: error.response.data.message || 'Invalid credentials.',
+        })
       } else {
-        Alert.alert('Error', 'An unexpected error occurred. Please try again.')
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'An unexpected error occurred. Please try again.',
+        })
       }
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   return (
@@ -53,8 +83,9 @@ export default function ForgotScreen() {
         keyboardType="email-address"
         autoCapitalize="none"
       />
+       {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
 
-      <TouchableOpacity style={styles.button} onPress={handleForgot}>
+      <TouchableOpacity style={styles.button} onPress={handleForgot} disabled={loading}>
         {loading ? (
           <ActivityIndicator color="#fff" />
         ) : (
@@ -74,6 +105,8 @@ export default function ForgotScreen() {
           <Text style={styles.signUpLink}> Signin</Text>
         </TouchableOpacity>
       </View>
+
+      <Toast />
     </View>
   )
 }
@@ -85,12 +118,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#f5f5f5',
     paddingHorizontal: 16,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 40,
   },
   input: {
     width: '100%',
@@ -118,11 +145,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-  forgotPassword: {
-    color: '#003366',
-    fontSize: 14,
-    marginBottom: 20,
-  },
   signUpContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -136,5 +158,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#003366',
     fontWeight: 'bold',
+  },
+  errorText: {
+    color: "red",
+    fontSize: 12,
+    marginBottom: 10,
+    alignSelf: "flex-start",
   },
 })

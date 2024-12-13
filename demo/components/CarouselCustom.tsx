@@ -1,23 +1,33 @@
 import React, { useState, useCallback, useRef } from 'react';
 import Carousel from 'react-native-reanimated-carousel';
 import Pagination from './Pagination';
-import { View, Text, StyleSheet, ImageBackground, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ImageBackground, Dimensions, TouchableOpacity } from 'react-native';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
-export default function CarouselCustom({ posts }) {
+export default function CarouselCustom({ posts, router }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const carouselRef = useRef(null);
 
-  // Memoized function for handling pagination press
   const onPressPagination = useCallback((index: number) => {
     setCurrentIndex(index);
     carouselRef.current?.scrollTo({ index, animated: true });
   }, []);
 
-  // Memoized function for rendering carousel items
+  const formatViews = (views) => {
+    if (views >= 1000000) {
+      return `${(views / 1000000).toFixed(1)}M`; // Format as millions
+    } else if (views >= 1000) {
+      return `${(views / 1000).toFixed(1)}K`; // Format as thousands
+    }
+    return views.toString(); // Return as-is for smaller numbers
+  };
+
+
   const renderCarouselItem = useCallback(({ item }) => (
-    <View style={styles.carouselItem}>
+    <TouchableOpacity style={styles.carouselItem}
+      onPress={() => router.push(`/articles/${item.id}`)}
+    >
       <ImageBackground
         source={{ uri: `${item.image}` }}
         style={styles.image}
@@ -35,15 +45,14 @@ export default function CarouselCustom({ posts }) {
             <View style={styles.metadataRow}>
               <Text style={styles.metadataText}>{item.category}</Text>
               <Text style={styles.metadataText}>•</Text>
-              <Text style={styles.metadataText}>2.4 K Reads</Text>
+              <Text style={styles.metadataText}>{formatViews(item.views)} Reads</Text>
             </View>
           </View>
         </View>
       </ImageBackground>
-    </View>
+    </TouchableOpacity>
   ), []);
 
-  // Memoized function for handling progress change
   const handleProgressChange = useCallback((_, absoluteProgress) => {
     const roundedIndex = Math.round(absoluteProgress);
     if (roundedIndex !== currentIndex) {
@@ -51,7 +60,7 @@ export default function CarouselCustom({ posts }) {
     }
   }, [currentIndex]);
 
-  const sliderData = posts.slice(0, 5); // Limit to the first 5 items
+  const sliderData = posts.slice(0, 5); 
   const mockSlider = sliderData.map((_, index) => index);
 
   return (

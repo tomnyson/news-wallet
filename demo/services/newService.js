@@ -63,6 +63,28 @@ const createSubscription = async (payload) => {
   return response
 }
 
+const createPaymentGooglePaySheet = (payload) => {
+  return api.post(`/api/payment-sheet-googlepay`,payload).catch(handleApiError);
+}
+
+const getBookmarks = async () => {
+  const response = await api.get(`/api/bookmarks`).catch(handleApiError);
+  return response
+}
+const createBookmark = async (payload) => {
+  const response = await api.post(`/api/bookmarks`,payload).catch(handleApiError);
+  return response
+}
+
+const removeBookmark = async (id) => {
+  const response = await api.delete(`/api/bookmarks/${id}`).catch(handleApiError);
+  return response
+}
+
+const getSettings = async () => {
+  const response = await api.get(`/api/guest/settings`).catch(handleApiError);
+  return response
+}
 const newService = {
     getPosts,
     getPostDetail,
@@ -72,7 +94,12 @@ const newService = {
     getCurrentUser,
     getCategories,
     getTags,
-    createSubscription
+    createSubscription,
+    createPaymentGooglePaySheet,
+    getBookmarks,
+    createBookmark,
+    removeBookmark,
+    getSettings
 };
 
 export default newService

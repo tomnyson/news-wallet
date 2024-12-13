@@ -2,20 +2,21 @@ import { Tabs } from 'expo-router'
 import React from 'react'
 import { Platform } from 'react-native'
 import { HapticTab } from '@/components/HapticTab'
-import { IconSymbol } from '@/components/ui/IconSymbol'
 import TabBarBackground from '@/components/ui/TabBarBackground'
 import { Colors } from '@/constants/Colors'
-import { useColorScheme } from '@/hooks/useColorScheme'
 import CustomHeader from '@/components/ui/CustomHeader'
+import Feather from '@expo/vector-icons/Feather';
+import Entypo from '@expo/vector-icons/Entypo';
+import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme()
-
+  // const segments = useSegments();
+  // const hide = segments.includes('articles');
   return (
     <Tabs
       screenOptions={{
         header: ({ navigation }) => <CustomHeader  />,
-        tabBarActiveTintColor: '#00008B',
+        tabBarActiveTintColor: Colors.light.primary,
         headerShown: true,
         tabBarShowLabel: false,
         headerTitleAlign: 'center',
@@ -25,14 +26,17 @@ export default function TabLayout() {
           ios: {
             position: 'absolute',
           },
-          default: {},
+          default: {
+            paddingVertical: 20,
+            paddingHorizontal: 20,
+          },
         }),
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          tabBarIcon: ({ color }) =><Feather name="home" size={28} color={color} />,
           headerTitle: 'HOME',
           headerShown: true,
         }}
@@ -40,7 +44,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="explore"
         options={{
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="explore.fill" color={color} />,
+          tabBarIcon: ({ color }) => <Entypo name="compass" size={28} color={color} />,
           headerTitle: 'CATEGORIES',
           tabBarShowLabel: false,
         }}
@@ -49,25 +53,15 @@ export default function TabLayout() {
       <Tabs.Screen
         name="bookmark"
         options={{
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="bookmark.fill" color={color} />,
+          tabBarIcon: ({ color }) => <Feather name="bookmark" size={28} color={color} />,
           headerTitle: 'ĐÃ LƯU',
           tabBarShowLabel: false,
         }}
       />
-
-      <Tabs.Screen
-        name="articles"
-        options={{
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="newspaper.fill" color={color} />,
-          headerTitle: 'BÀI VIẾT',
-          tabBarShowLabel: false,
-        }}
-      />
-
       <Tabs.Screen
         name="users"
         options={{
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="person.fill" color={color} />,
+          tabBarIcon: ({ color }) => <FontAwesome5 name="user" size={28} color={color} />,
           headerTitle: 'CÁ NHÂN',
           tabBarShowLabel: false,
         }}

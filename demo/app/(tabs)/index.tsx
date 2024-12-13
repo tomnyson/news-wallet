@@ -9,12 +9,14 @@ import {
   Platform,
   StatusBar,
   ScrollView,
-  ActivityIndicator
+  ActivityIndicator,
+  TouchableOpacity
 } from 'react-native'
 import newService from '@/services/newService'
 import { formatDistanceToNow } from "date-fns";
-import { useNavigation } from 'expo-router'
+import { useNavigation, useRouter } from 'expo-router'
 import CarouselCustom from '@/components/CarouselCustom'
+import {Colors} from '@/constants/Colors'
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window')
 
@@ -22,6 +24,8 @@ export default function HomeScreen() {
   const [posts, setPosts] = useState([])
   const [loading, setLoading] = useState(false)
   const navigation = useNavigation()
+  const router = useRouter()
+  
    const SERVER_STATIC = process.env.EXPO_PUBLIC_API_URL + '/storage'
   useEffect(() => {
     fetchData()
@@ -48,7 +52,6 @@ export default function HomeScreen() {
         sort: 'desc',
       }
       const response = await newService.getPosts(query)
-      console.log('response:', response)
       if(response && response.data) {
         const fetchedArticles = response.data.map((article) => ({
             id: article.id,
@@ -59,9 +62,9 @@ export default function HomeScreen() {
             time: article.created_at 
           ? formatDistanceToNow(new Date(article.created_at), { addSuffix: true }) 
           : "Just now",
+          views: article.views,
             image: `${SERVER_STATIC}/${article.image}`, // Replace with actual image logic if applicable
           }));
-          console.log('fetchedArticles', fetchedArticles)
           setPosts(fetchedArticles);
           setLoading(false)
     }
@@ -73,10 +76,12 @@ export default function HomeScreen() {
   }
   
   const renderItem = ({ item }) => (
-    <View style={styles.card}>
+    <TouchableOpacity style={styles.card}
+      onPress={() => router.push(`/articles/${item.id}`)}
+    >
       <Image
         source={{
-          uri: 'https://cdnmedia.baotintuc.vn/Upload/DmtgOUlHWBO5POIHzIwr1A/files/2024/12/11/Syria-11122024-03.jpg',
+          uri: item.image,
         }}
         style={[styles.newImage, styles.imageStyle]}
       />
@@ -96,13 +101,13 @@ export default function HomeScreen() {
         </View>
        
       </View>
-    </View>
+    </TouchableOpacity>
   )
 
   if(loading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="#0000ff" />
+        <ActivityIndicator size="large" color={Colors.light.primary} />
       </View>
     )
   }
@@ -114,7 +119,7 @@ export default function HomeScreen() {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <CarouselCustom posts={posts}/>
+        <CarouselCustom posts={posts} router={router}/>
       </View>
       <View style={styles.footer}>
         {/* All Today's News Section */}
@@ -142,7 +147,7 @@ export default function HomeScreen() {
           renderItem={renderItem}
           ListEmptyComponent={() => (
             <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>No articles available.</Text>
+              <Text style={styles.emptyText}>You need to buy a package to see this news.</Text>
             </View>
           )}
         />
@@ -167,6 +172,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   flatList: {
+    paddingVertical: 16,
   },
 
   carousel: {
@@ -193,7 +199,7 @@ const styles = StyleSheet.create({
   // list news
   newImage: {
     width: '60%',
-    height: 200, // Adjust as per your need
+    height: 150, // Adjust as per your need
     justifyContent: 'flex-end',
   },
   newsInfo: {
@@ -209,7 +215,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   dot: {
-    color: '#00008B', // Blue color for the dot
+    color: Colors.light.primary, // Blue color for the dot
     fontSize: 18,
   },
   newTitle: {
@@ -227,7 +233,7 @@ const styles = StyleSheet.create({
   new_dot: {
     width: 10,
     height: 10,
-    backgroundColor: '#001148',
+    backgroundColor: Colors.light.primary,
     borderRadius: 5,
     marginRight: 8,
   },
@@ -266,4 +272,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: 'gray',
   },
+  header: {
+    flex: 1,
+  }
 })

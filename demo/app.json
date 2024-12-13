@@ -23,9 +23,7 @@
         "backgroundColor": "#003366"
       },
       "package": "com.tomnyson.demo",
-      "permissions": [
-        "INTERNET"
-      ]
+      "permissions": ["INTERNET", "CAMERA", "READ_EXTERNAL_STORAGE"]
     },
     "web": {
       "bundler": "metro",
@@ -34,13 +32,13 @@
     },
     "plugins": [
       "expo-router",
-        [
-          "@stripe/stripe-react-native",
-          {
-            "merchantIdentifier": "",
-            "enableGooglePay": true
-          }
-        ]
+      [
+        "@stripe/stripe-react-native",
+        {
+          "merchantIdentifier": "",
+          "enableGooglePay": true
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

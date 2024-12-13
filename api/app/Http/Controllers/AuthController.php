@@ -31,6 +31,12 @@ class AuthController extends Controller
                 'role' => $role,
             ]);
 
+            // create default wallet
+            $user->wallet()->create([
+                'balance' => 0,
+            ]);
+            
+
             $token = $user->createToken('auth_token')->plainTextToken;
 
             return response()->json([

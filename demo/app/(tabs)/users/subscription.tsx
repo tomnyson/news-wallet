@@ -1,58 +1,94 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react'
 import {
   View,
   Text,
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  Alert,
   ActivityIndicator,
-} from 'react-native';
-import newService from '@/services/newService';
-
-import { CardField, useStripe } from '@stripe/stripe-react-native';
-import { useRouter } from 'expo-router';
+} from 'react-native'
+import newService from '@/services/newService'
+import { useRouter, useNavigation } from 'expo-router'
+import Toast from 'react-native-toast-message'
+import { Colors } from '@/constants/Colors'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import {checkTokenValidity} from '@/services/auth'
 
 export default function SubscriptionScreen() {
-  const [selectedPackage, setSelectedPackage] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [packages, setPackages] = useState([]);
-  const router = useRouter();
+  const [selectedPackage, setSelectedPackage] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [packages, setPackages] = useState([])
+  const router = useRouter()
 
   useEffect(() => {
     const fetchPackages = async () => {
       try {
-        
-        const response = await newService.getPackages();
-              setPackages(response);
-              setLoading(false)
-       
+        const response = await newService.getPackages()
+        setPackages(response)
+        setLoading(false)
       } catch (error) {
-        console.error("Error fetching articles:", error);
+        console.error('Error fetching articles:', error)
       }
-    };
+    }
+    fetchPackages()
+  }, [])
 
-    fetchPackages();
-  }, []);
+  const navigation = useNavigation()
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      checkAuth()
+    })
+
+    return unsubscribe
+  }, [navigation])
+
+  const checkAuth = async () => {
+    try {
+      const token = await AsyncStorage.getItem('token')
+      if (token) {
+        try {
+          const isValid = await checkTokenValidity(token)
+          if (isValid && isValid.status == 401) {
+            console.warn('Invalid token. Redirecting to login.')
+            router.push('/login')
+          }
+        } catch (err) {
+          console.error('Error checking token validity:', err)
+        }
+      } else {
+        console.warn('No token found. Redirecting to login.')
+        router.push('/login')
+      }
+    } catch (error) {
+      console.error('Authentication check error:', error)
+    }
+  }
+
 
 
   const handleBuySubscription = async () => {
-      const payload = {
-        package_id: selectedPackage.id
-      }
-      const response = await newService.createSubscription(payload)
-      if(response && !response.status) {
-        Alert.alert('Success', 'Subscription purchased successfully');
-        router.back();
-      } else {
-        console.log('response', response.data.message)
-        const error = response.data.message || 'Subscription purchase failed';
-        Alert.alert('Error', error);
-      }
-
+    const payload = {
+      package_id: selectedPackage.id,
+    }
+    const response = await newService.createSubscription(payload)
+    if (response && !response.status) {
+      Toast.show({
+        type: 'success',
+        text1: 'Success',
+        text2: 'Subscription purchased successfully',
+      })
+      router.back()
+    } else {
+      const error = response.data.message || 'Subscription purchase failed'
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: error,
+      })
+    }
   }
 
-  if(loading) {
+  if (loading) {
     return (
       <View style={styles.container}>
         <ActivityIndicator size="large" color="#007bff" />
@@ -68,10 +104,7 @@ export default function SubscriptionScreen() {
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <TouchableOpacity
-            style={[
-              styles.package,
-              selectedPackage?.id === item.id && styles.selectedPackage,
-            ]}
+            style={[styles.package, selectedPackage?.id === item.id && styles.selectedPackage]}
             onPress={() => setSelectedPackage(item)}
           >
             <Text style={styles.packageName}>Name: {item.name}</Text>
@@ -82,13 +115,21 @@ export default function SubscriptionScreen() {
       />
       {selectedPackage && (
         <>
-          <TouchableOpacity style={styles.button} onPress={handleBuySubscription} disabled={loading}>
-            {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Pay</Text>}
+          <TouchableOpacity
+            style={styles.button}
+            onPress={handleBuySubscription}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.buttonText}>Pay</Text>
+            )}
           </TouchableOpacity>
         </>
       )}
     </View>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -115,7 +156,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   selectedPackage: {
-    borderColor: '#007bff',
+    borderColor: Colors.light.primary,
     borderWidth: 2,
   },
   packageName: {
@@ -124,12 +165,12 @@ const styles = StyleSheet.create({
   },
   packagePrice: {
     fontSize: 16,
-    color: '#888',
+    color: Colors.light.secondary,
   },
   packageDuration: {
     fontSize: 16,
     marginVertical: 5,
-    color: '#888',
+    color: Colors.light.secondary,
   },
   paymentHeader: {
     fontSize: 20,
@@ -147,18 +188,18 @@ const styles = StyleSheet.create({
     marginVertical: 16,
   },
   button: {
-    backgroundColor: '#007bff',
+    backgroundColor: Colors.light.primary,
     padding: 16,
     borderRadius: 8,
     alignItems: 'center',
     marginVertical: 8,
   },
   googlePayButton: {
-    backgroundColor: '#34A853',
+    backgroundColor: Colors.light.success,
   },
   buttonText: {
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 16,
   },
-});
+})

@@ -10,10 +10,6 @@ export default function Pagination({
   dotStyle = {}, // Default to empty object
   activeDotStyle = {}, // Default to empty object
 }) {
-  console.log('data', data)
-  useEffect(() => {
-    console.log('Pagination data updated:', data);
-  }, [data, progress]);
   return (
     <View
       style={[

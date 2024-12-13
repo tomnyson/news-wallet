@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Request;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\PackageController;
@@ -11,7 +10,7 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\SettingController;
-use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\BookmarkController;
 
 
 Route::post('/register', [AuthController::class, 'register']);
@@ -24,7 +23,6 @@ Route::prefix('guest')->middleware(['optional.token'])->group(function () {
     Route::get('/categories', [CategoryController::class, 'index']);
     Route::get('/settings', [SettingController::class, 'index']);
     Route::get('/tags', [TagController::class, 'index']);
-    // Route::post('/wallet/top-up', [WalletController::class, 'topUp']);
 });
 
 Route::middleware(['auth:sanctum'])->group(function () {
@@ -40,9 +38,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::apiResource('tags', TagController::class);
         Route::apiResource('users', UserController::class);
         Route::apiResource('transactions', TransactionController::class);
+        Route::apiResource('settings', SettingController::class);
+        Route::apiResource('bookmarks', BookmarkController::class);
         Route::post('/subscriptions', [TransactionController::class, 'buySubscriptions']);
         Route::post('/payment-sheet', [PaymentController::class, 'createPaymentSheet']);
         Route::post('/payment-sheet-googlepay', [PaymentController::class, 'createPaymentSheetGoogle']);
+      
 
     } catch (\Exception $e) {
         return response()->json(['error' => 'Unauthorized'], 403);

@@ -78,8 +78,11 @@ class PostController extends Controller
                 $query->orderBy('created_at', $order);
             }
 
+            
+
             // Retrieve the posts
             $posts = $query->get();
+
 
             return response()->json([
                 'message' => 'Posts retrieved successfully',
@@ -176,15 +179,29 @@ class PostController extends Controller
         return response()->json(['message' => 'Post deleted successfully']);
     }
 
-    public function getDetail($id)
+    public function getDetail($id, request $request)
     {
         try {
             $post = Post::with('category', 'tags')->find($id);
-
+    
             if (!$post) {
                 return response()->json(['message' => 'Post not found'], 404);
             }
-
+            $post->increment('views');
+    
+          
+            $isBookmarked = false;
+            $bookmarkId = null;
+            if ($user = $request->user()) {
+                $isBookmarked = $user->bookmarks()->where('post_id', $id)->exists();
+                if ($isBookmarked) {
+                    $bookmarkId = $user->bookmarks()->where('post_id', $id)->first()->id;
+                }
+            }
+    
+            $post->isBookmarked = $isBookmarked;
+            $post->bookmarkId = $bookmarkId;
+    
             return response()->json($post, 200);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 500);

@@ -1,57 +1,107 @@
-import React from "react";
-import { View, Text, Image, FlatList, StyleSheet, TouchableOpacity } from "react-native";
+import React, {useEffect, useState} from "react";
+import { View, Text, Image, FlatList, StyleSheet, TouchableOpacity, ActivityIndicator } from "react-native";
+import newService from '@/services/newService';
+import { formatDistanceToNow } from "date-fns";
+import { useRouter, useGlobalSearchParams, useNavigation } from "expo-router";
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import {checkTokenValidity} from '@/services/auth';
+import { IMAGE_URL } from "@/utils/constants";
 
 export default function BookmarkScreen() {
   // Sample data for bookmarked articles
-  const bookmarkedArticles = [
-    {
-      id: "1",
-      title: "Politicians spoke into microphones after the meeting",
-      category: "Politics",
-      time: "5 min ago",
-      image: require('../../assets/images/images-holder.png'),
-    },
-    {
-      id: "2",
-      title: "Politicians spoke into microphones after the meeting",
-      category: "Politics",
-      time: "5 min ago",
-      image: require('../../assets/images/images-holder.png'),
-    },
-    {
-      id: "3",
-      title: "Politicians spoke into microphones after the meeting",
-      category: "Politics",
-      time: "5 min ago",
-      image: require('../../assets/images/images-holder.png'),
-    },
-  ];
+  const [bookmarks, setBookmark] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+  const navigation = useNavigation();
 
-  const renderItem = ({ item }) => (
-    <TouchableOpacity style={styles.card}>
-      {/* Article Image */}
-      <Image source={item.image} style={styles.image} />
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      checkAuth();
+      fetchBookMarkData();
+    });
 
-      {/* Article Info */}
+    return unsubscribe;
+  }, [navigation]);
+
+  const checkAuth = async () => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (token) {
+        try {
+          const isValid = await checkTokenValidity();
+          if (isValid && isValid.status == 401) {
+            console.warn('Invalid token. Redirecting to login.');
+            router.push('/login');
+          }
+        } catch (err) {
+          console.error('Error checking token validity:', err);
+        }
+        
+      }else {
+        console.warn('No token found. Redirecting to login.');
+        router.push('/login');
+      }
+    } catch (error) {
+      console.error('Authentication check error:', error);
+    }
+  };
+
+  const fetchBookMarkData = async () => {
+    try {
+      setLoading(true)
+      const response = await newService.getBookmarks()
+      setBookmark(response)
+    } catch (error) {
+      console.error('Error fetching user data:', error)
+      Alert.alert('Error', 'Failed to fetch user data.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const renderItem = ({ item: {post} }) => {
+    const image = `${IMAGE_URL}/${post.image}`
+    return (
+      <TouchableOpacity style={styles.card}
+    onPress={() => router.push(`/articles/${post.id}`)}
+    >
+      <Image source={{ uri: image }} style={styles.image} />
       <View style={styles.info}>
-        <Text style={styles.title}>{item.title}</Text>
+        <Text style={styles.title}>{post.title}</Text>
         <View style={styles.metadata}>
-          <Text style={styles.category}>{item.category}</Text>
+          <Text style={styles.category}>{post?.category?.name}</Text>
           <Text style={styles.dot}> ● </Text>
-          <Text style={styles.time}>{item.time}</Text>
+          <Text style={styles.time}>{post.created_at 
+              ? formatDistanceToNow(new Date(post.created_at), { addSuffix: true }) 
+              : "Just now"}</Text>
         </View>
       </View>
     </TouchableOpacity>
-  );
+    )
+  }
+
+
+  if(loading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color="#000" />
+      </View>
+    )
+  }
 
   return (
     <View style={styles.container}>
       <FlatList
-        data={bookmarkedArticles}
+        data={bookmarks}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         contentContainerStyle={styles.listContainer}
         showsVerticalScrollIndicator={false}
+        ListEmptyComponent={() => (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>No bookmarks available.</Text>
+          </View>
+        )}
       />
     </View>
   );
@@ -102,12 +152,19 @@ const styles = StyleSheet.create({
   dot: {
     fontSize: 14,
     color: "#888",
-    marginLeft: 10
   },
   time: {
     fontSize: 14,
     color: "#888",
-    fontWeight: "bold",
-
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: 'gray',
   },
 });
