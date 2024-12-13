@@ -5,12 +5,13 @@ const handleApiError = (error) => {
     console.error('Response data:', error.response.data);
     console.error('Response status:', error.response.status);
     console.error('Response headers:', error.response.headers);
+    return error.response;
   } else if (error.request) {
     console.error('Request error:', error.request);
   } else {
     console.error('Error message:', error.message);
   }
-  throw error; // Re-throw to handle it further if necessary
+  return null;
 }
 
 const authService = {
@@ -27,9 +28,14 @@ const authService = {
       return api.get('/users').catch(handleApiError);
     },
     getUserDetail(id) {
-      console.log('getUserDetail', id);
       return api.get(`/users/${id}`).catch(handleApiError);
-    }
+    },
+    deleteUser(id) {
+      return api.delete(`/users/${id}`).catch(handleApiError);
+    },
+    addUser(payload) {
+      return api.post('/users', payload).catch(handleApiError);
+    },
   };
   
   export default authService;

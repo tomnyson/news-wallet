@@ -7,9 +7,11 @@ use Illuminate\Http\Request;
 
 class CategoryController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return Category::all();
+        $limit = $request->input('limit', 5);
+        $page = $request->input('page', 1);
+        return Category::orderBy('created_at', 'desc')->paginate($limit, ['*'], 'page', $page);
     }
 
     public function store(Request $request)

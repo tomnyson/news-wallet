@@ -10,18 +10,28 @@ use App\Http\Controllers\TagController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\TransactionController;
+use App\Http\Controllers\SettingController;
 use Illuminate\Support\Facades\Auth;
 
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
-Route::get('/posts-user', [PostController::class, 'getPosts']);
+Route::post('/forgot', [AuthController::class, 'forgotPassword']);
 
-// Route::post('/wallet/top-up', [WalletController::class, 'topUp']);
+Route::prefix('guest')->middleware(['optional.token'])->group(function () {
+    Route::get('/posts', [PostController::class, 'getPosts']);
+    Route::get('/posts/{id}', [PostController::class, 'getDetail']);
+    Route::get('/categories', [CategoryController::class, 'index']);
+    Route::get('/settings', [SettingController::class, 'index']);
+    Route::get('/tags', [TagController::class, 'index']);
+    // Route::post('/wallet/top-up', [WalletController::class, 'topUp']);
+});
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum'])->group(function () {
     try {
         Route::post('/logout', [AuthController::class, 'logout']);
+        Route::get('/check-token', [AuthController::class, 'checkToken']);
+        Route::get('/refresh-token', [AuthController::class, 'refreshToken']);
         // Add additional protected routes here
         Route::get('/current-user', [UserController::class, 'currentUser']);
         Route::apiResource('packages', PackageController::class);
@@ -30,6 +40,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('tags', TagController::class);
         Route::apiResource('users', UserController::class);
         Route::apiResource('transactions', TransactionController::class);
+        Route::post('/subscriptions', [TransactionController::class, 'buySubscriptions']);
         Route::post('/payment-sheet', [PaymentController::class, 'createPaymentSheet']);
         Route::post('/payment-sheet-googlepay', [PaymentController::class, 'createPaymentSheetGoogle']);
 

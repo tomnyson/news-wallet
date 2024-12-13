@@ -7,9 +7,11 @@ use Illuminate\Http\Request;
 
 class TagController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return Tag::all();
+        $limit = $request->input('limit', 5);
+        $page = $request->input('page', 1);
+        return Tag::orderBy('created_at', 'desc')->paginate($limit, ['*'], 'page', $page);
     }
 
     public function store(Request $request)
