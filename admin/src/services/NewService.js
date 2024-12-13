@@ -92,8 +92,8 @@ const NewService = {
   updateSettings(id, payload) {
     return api.put(`/settings/${id}`, payload).catch(handleApiError)
   },
-  deleteSettings() {
-    return api.delete('/settings').catch(handleApiError)
+  deleteSettings(id) {
+    return api.delete(`/settings/${id}`).catch(handleApiError)
   },
   postSettings(payload) {
     return api.post('/settings', payload).catch(handleApiError)

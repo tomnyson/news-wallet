@@ -107,6 +107,7 @@ const onSubmit = handleSubmit(async (formValues) => {
 });
 
 const removeSetting = async (setting) => {
+  console.log(setting)
   if (confirm(`Are you sure you want to delete "${setting.key}"?`)) {
     await newService.deleteSettings(setting.id);
     await fetchSettings();
